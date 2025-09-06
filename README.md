@@ -1,5 +1,5 @@
 # 💫 About Me:
-  Ambitious and detail-oriented IT professional with hands-on experience in Python, and web development technologies. Seeking a challenging position in the IT industry where I can leverage my technical skills to contribute to organizational growth while continuing to develop professionally.
+  Aspiring AI Engineer / Full-Stack Developer with hands-on experience in AI-driven applications and web development. Eager to apply skills in Next.js, Python, and cloud technologies to build intelligent solutions and contribute to organizational growth.
 
 
 # 💻 Tech Stack:
