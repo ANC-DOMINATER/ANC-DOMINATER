@@ -241,9 +241,20 @@ def hero(t0):
           <animateTransform attributeName="gradientTransform" type="translate"
             values="-420 0;420 0;420 0" keyTimes="0;.5;1" dur="7s" begin="1.2s" repeatCount="indefinite"/>
         </linearGradient>'''
+    line_fill = TEXT if STATIC else "url(#line-shine)"
+    if not STATIC:
+        defs += f'''<linearGradient id="line-shine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="240" y2="0">
+          <stop offset="0" stop-color="{TEXT}"/><stop offset=".38" stop-color="{TEXT}"/>
+          <stop offset=".5" stop-color="#8B7CF8"/><stop offset=".62" stop-color="{TEXT}"/>
+          <stop offset="1" stop-color="{TEXT}"/>
+          <animateTransform attributeName="gradientTransform" type="translate"
+            values="-240 0;240 0;240 0" keyTimes="0;.5;1" dur="7s" begin="1.2s" repeatCount="indefinite"/>
+        </linearGradient>'''
+    underline = f'<rect class="name-shine" x="42" y="181" width="240" height="1.5" rx=".75" fill="{line_fill}"/>'
     body = (f'<rect x="40" y="45" width="6" height="6" rx="1" fill="{ACCENT}"/>' + pulse
         + T(56, 51, EYEBROW, 10, MUTED, extra=' letter-spacing="1.4"')
         + T(38, 154, NAME, 72, name_fill, cls="fu name-shine", d=.15, extra=' style="font-family:Serif;font-style:italic"')
+        + underline
         + T(42, 224, "I build AI-driven apps, LLM pipelines", 16, "#494B4A", cls="fu", d=.4)
         + T(42, 248, "and automation with Python and Next.js.", 16, "#494B4A", cls="fu", d=.5)
         + T(42, 302, "BANGALORE, INDIA     /     ANC-DOMINATER", 10, MUTED, cls="fi", d=.65,
