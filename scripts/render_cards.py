@@ -227,7 +227,7 @@ def hero(t0):
         for y in range(image.height):
             line = "".join(ramp[min(9, (255-image.getpixel((x,y)))*10//256)] for x in range(image.width))
             rows += T(542, 64+y*4.8, line, 4, "#676963", cls="fi", d=.2+y*.025,
-                      extra=' xml:space="preserve" style="font-family:monospace"')
+                      extra=' xml:space="preserve" textLength="216" lengthAdjust="spacingAndGlyphs" style="font-family:monospace"')
     pulse = deco(f'<circle cx="43" cy="48" r="5" fill="{ACCENT}"><animate attributeName="opacity" values="1;.15;1" dur="2s" repeatCount="indefinite"/></circle>')
     shine = deco(f'<rect x="40" y="182" width="72" height="3" rx="1.5" fill="{ACCENT}"><animate attributeName="width" values="72;180;72" dur="4s" repeatCount="indefinite"/></rect>')
     body = (f'<rect x="40" y="45" width="6" height="6" rx="1" fill="{ACCENT}"/>' + pulse
@@ -380,4 +380,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
