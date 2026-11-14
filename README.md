@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="cards/hero.svg?v=3" width="100%" alt="G Shashank — AI engineer and full-stack developer in Bangalore. I build AI-driven apps, LLM pipelines and automation with Python and Next.js." />
+  <img src="cards/hero.svg?v=4" width="100%" alt="G Shashank — AI engineer and full-stack developer in Bangalore. I build AI-driven apps, LLM pipelines and automation with Python and Next.js." />
 </p>
 
 <p align="center">

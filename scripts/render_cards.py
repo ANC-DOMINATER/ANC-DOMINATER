@@ -141,7 +141,7 @@ ANIM_CSS = """
 @keyframes gr{0%{transform:scaleY(.1)}12%,85%{transform:scaleY(1)}100%{transform:scaleY(.1)}}
 @keyframes gx{from{transform:scaleX(0)}}
 @keyframes pop{0%,100%{opacity:.35;transform:scale(.8)}15%,85%{opacity:1;transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}.deco{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.deco{display:none}.name-shine{fill:#171817!important}}
 """
 
 
@@ -229,16 +229,26 @@ def hero(t0):
             rows += T(542, 64+y*4.8, line, 4, "#676963", cls="fi", d=.2+y*.025,
                       extra=' xml:space="preserve" textLength="216" lengthAdjust="spacingAndGlyphs" style="font-family:monospace"')
     pulse = deco(f'<circle cx="43" cy="48" r="5" fill="{ACCENT}"><animate attributeName="opacity" values="1;.15;1" dur="2s" repeatCount="indefinite"/></circle>')
-    shine = deco(f'<rect x="40" y="182" width="72" height="3" rx="1.5" fill="{ACCENT}"><animate attributeName="width" values="72;180;72" dur="4s" repeatCount="indefinite"/></rect>')
+    # Move a narrow cobalt highlight through the name, rather than drawing an underline.
+    defs = ""
+    name_fill = TEXT
+    if not STATIC:
+        name_fill = "url(#name-shine)"
+        defs = f'''<linearGradient id="name-shine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="420" y2="0">
+          <stop offset="0" stop-color="{TEXT}"/><stop offset=".38" stop-color="{TEXT}"/>
+          <stop offset=".5" stop-color="{ACCENT}"/><stop offset=".62" stop-color="{TEXT}"/>
+          <stop offset="1" stop-color="{TEXT}"/>
+          <animateTransform attributeName="gradientTransform" type="translate"
+            values="-420 0;420 0;420 0" keyTimes="0;.5;1" dur="7s" begin="1.2s" repeatCount="indefinite"/>
+        </linearGradient>'''
     body = (f'<rect x="40" y="45" width="6" height="6" rx="1" fill="{ACCENT}"/>' + pulse
         + T(56, 51, EYEBROW, 10, MUTED, extra=' letter-spacing="1.4"')
-        + T(38, 154, NAME, 72, ACCENT, cls="fu", d=.15, extra=' style="font-family:Serif;font-style:italic"')
-        + shine
+        + T(38, 154, NAME, 72, name_fill, cls="fu name-shine", d=.15, extra=' style="font-family:Serif;font-style:italic"')
         + T(42, 224, "I build AI-driven apps, LLM pipelines", 16, "#494B4A", cls="fu", d=.4)
         + T(42, 248, "and automation with Python and Next.js.", 16, "#494B4A", cls="fu", d=.5)
         + T(42, 302, "BANGALORE, INDIA     /     ANC-DOMINATER", 10, MUTED, cls="fi", d=.65,
             extra=' letter-spacing="1"') + rows)
-    card("hero", 338, NAME + " | AI engineer and full-stack developer", TAGLINE, body)
+    card("hero", 338, NAME + " | AI engineer and full-stack developer", TAGLINE, body, defs=defs)
 
 
 def activity(t0, days, st):
