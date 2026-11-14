@@ -248,7 +248,7 @@ def hero(t0):
         + T(42, 248, "and automation with Python and Next.js.", 16, "#494B4A", cls="fu", d=.5)
         + T(42, 302, "BANGALORE, INDIA     /     ANC-DOMINATER", 10, MUTED, cls="fi", d=.65,
             extra=' letter-spacing="1"') + rows)
-    card("hero", 338, NAME + " | AI engineer and full-stack developer", TAGLINE, body, defs=defs)
+    card("hero-motion", 338, NAME + " | AI engineer and full-stack developer", TAGLINE, body, defs=defs)
 
 
 def activity(t0, days, st):
@@ -375,6 +375,8 @@ def main():
     days, st = data["days"], stats(data["days"])
     # No project panels: the profile stays focused on the person and activity.
     for old in OUT.glob("repo-*.svg"):
+        old.unlink()
+    for old in OUT.glob("hero.svg"):
         old.unlink()
     hero(0)
     graph(.5, days, st)
