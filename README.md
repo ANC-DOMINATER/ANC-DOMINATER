@@ -14,6 +14,12 @@
 
 <p align="center">
 <!-- repos:start -->
+<a href="https://github.com/ANC-DOMINATER/SmartHealth-EHR-Integration-Dashboard"><img src="cards/repo-1.svg" width="100%" alt="SmartHealth-EHR-Integration-Dashboard: SmartHealth EHR Integration Dashboard: A Secure Next.js Application for CRUD Operations using FHIR API"/></a>
+<a href="https://github.com/ANC-DOMINATER/Troy-Masker-Extension"><img src="cards/repo-2.svg" width="100%" alt="Troy-Masker-Extension: repository"/></a>
+<a href="https://github.com/ANC-DOMINATER/otel"><img src="cards/repo-3.svg" width="100%" alt="otel: repository"/></a>
+<a href="https://github.com/ANC-DOMINATER/voice-agent"><img src="cards/repo-4.svg" width="100%" alt="voice-agent: repository"/></a>
+<a href="https://github.com/ANC-DOMINATER/Rexite"><img src="cards/repo-5.svg" width="100%" alt="Rexite: repository"/></a>
+<a href="https://github.com/ANC-DOMINATER/React-Quiz"><img src="cards/repo-6.svg" width="100%" alt="React-Quiz: repository"/></a>
 <!-- repos:end -->
 </p>
 
