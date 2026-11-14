@@ -133,14 +133,14 @@ def font_face(text):
 ANIM_CSS = """
 .fu{animation:fu .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0s)}
 .fi{animation:fi .9s ease both;animation-delay:var(--d,0s)}
-.gr{transform-box:fill-box;transform-origin:50% 100%;animation:gr .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0s)}
+.gr{transform-box:fill-box;transform-origin:50% 100%;animation:gr 8s ease-in-out infinite both;animation-delay:var(--d,0s)}
 .gx{transform-box:fill-box;transform-origin:0 50%;animation:gx .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0s)}
-.pop{transform-box:fill-box;transform-origin:50% 50%;animation:pop .35s ease-out both;animation-delay:var(--d,0s)}
+.pop{transform-box:fill-box;transform-origin:50% 50%;animation:pop 7s ease-in-out infinite both;animation-delay:var(--d,0s)}
 @keyframes fu{from{opacity:0;transform:translateY(10px)}}
 @keyframes fi{from{opacity:0}}
-@keyframes gr{from{transform:scaleY(0)}}
+@keyframes gr{0%{transform:scaleY(.1)}12%,85%{transform:scaleY(1)}100%{transform:scaleY(.1)}}
 @keyframes gx{from{transform:scaleX(0)}}
-@keyframes pop{from{opacity:0;transform:scale(.2)}}
+@keyframes pop{0%,100%{opacity:.35;transform:scale(.8)}15%,85%{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}.deco{display:none}}
 """
 
@@ -218,44 +218,27 @@ def fmt(n):
 
 # ---- cards ---------------------------------------------------------------------
 def hero(t0):
+    # A square raster sampled into glyphs with square physical pixel spacing.
     rows = ""
     if PORTRAIT:
-        image = ImageOps.fit(Image.open(PORTRAIT).convert("L"), (84, 86), centering=(.5, .4))
+        image = Image.open(PORTRAIT).convert("L").resize((90, 45), Image.Resampling.LANCZOS)
         image = ImageOps.autocontrast(image)
         ramp = " .:-=+*#%@"
         for y in range(image.height):
             line = "".join(ramp[min(9, (255-image.getpixel((x,y)))*10//256)] for x in range(image.width))
-            rows += T(488, 66+y*3.5, line, 4.3, "#676963", cls="fi", d=.2+y*.018,
+            rows += T(542, 64+y*4.8, line, 4, "#676963", cls="fi", d=.2+y*.025,
                       extra=' xml:space="preserve" style="font-family:monospace"')
-    dot = deco(f'<circle cx="43" cy="48" r="3" fill="{ACCENT}"><animate attributeName="opacity" values="1;.25;1" dur="2s" repeatCount="indefinite"/></circle>')
-    body = (f'<rect x="40" y="45" width="6" height="6" rx="1" fill="{ACCENT}"/>' + dot
+    pulse = deco(f'<circle cx="43" cy="48" r="5" fill="{ACCENT}"><animate attributeName="opacity" values="1;.15;1" dur="2s" repeatCount="indefinite"/></circle>')
+    shine = deco(f'<rect x="40" y="182" width="72" height="3" rx="1.5" fill="{ACCENT}"><animate attributeName="width" values="72;180;72" dur="4s" repeatCount="indefinite"/></rect>')
+    body = (f'<rect x="40" y="45" width="6" height="6" rx="1" fill="{ACCENT}"/>' + pulse
         + T(56, 51, EYEBROW, 10, MUTED, extra=' letter-spacing="1.4"')
-        + T(38, 157, "G", 98, TEXT, cls="fu", d=.1, extra=' style="font-family:Serif"')
-        + T(38, 247, "Shashank", 98, ACCENT, cls="fu", d=.25, extra=' style="font-family:Serif;font-style:italic"')
-        + T(42, 298, "I build AI-driven apps, LLM pipelines", 16, "#494B4A", cls="fu", d=.45)
-        + T(42, 322, "and automation with Python and Next.js.", 16, "#494B4A", cls="fu", d=.55)
-        + T(42, 360, "BANGALORE, INDIA     /     ANC-DOMINATER", 10, MUTED, cls="fi", d=.7,
+        + T(38, 154, NAME, 72, ACCENT, cls="fu", d=.15, extra=' style="font-family:Serif;font-style:italic"')
+        + shine
+        + T(42, 224, "I build AI-driven apps, LLM pipelines", 16, "#494B4A", cls="fu", d=.4)
+        + T(42, 248, "and automation with Python and Next.js.", 16, "#494B4A", cls="fu", d=.5)
+        + T(42, 302, "BANGALORE, INDIA     /     ANC-DOMINATER", 10, MUTED, cls="fi", d=.65,
             extra=' letter-spacing="1"') + rows)
-    card("hero", 396, NAME + " | AI engineer and full-stack developer", TAGLINE, body)
-
-
-def tile(t0, i, spec):
-    name, title, sub, _, ck = spec
-    color = COL[ck]
-    ink = TEXT if i == 2 else "#FFFFFF"
-    labels = ["EXPLORE", "CONNECT", "BUILD"]
-    titles = ["Portfolio", "LinkedIn", "GitHub"]
-    subs = ["Ideas into working software.", "Let us connect and collaborate.", "Code, experiments and learning."]
-    body = (f'<rect width="260" height="190" rx="14" fill="{color}"/>'
-        + T(22, 33, labels[i], 10, ink, extra=' letter-spacing="1.5"')
-        + T(236, 33, "→", 16, ink, anchor="end", cls="fu", d=t0+i*.15)
-        + T(20, 104, titles[i], 43, ink, cls="fu", d=t0+.1+i*.15,
-            extra=' style="font-family:Serif;font-style:italic"')
-        + T(22, 143, subs[i], 11, ink, cls="fu", d=t0+.2+i*.15))
-    css = font_face(body) + "text{font-family:'Space Grotesk',sans-serif}" + ("" if STATIC else ANIM_CSS)
-    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="260" height="190" viewBox="0 0 260 190" role="img"><title>{title}: {sub}</title><style>{css}</style>{body}</svg>'
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / f"{name}.svg").write_text(svg, encoding="utf-8")
+    card("hero", 338, NAME + " | AI engineer and full-stack developer", TAGLINE, body)
 
 
 def activity(t0, days, st):
@@ -386,8 +369,8 @@ def main():
     hero(0)
     graph(.5, days, st)
     activity(1.1, days, st)
-    for i, spec in enumerate(TILES):
-        tile(1.8, i, spec)
+    for old in OUT.glob("tile-*.svg"):
+        old.unlink()
     mode = "STATIC (final frame)" if STATIC else "animated"
     sizes = {p.name: p.stat().st_size for p in sorted(OUT.glob("*.svg"))}
     print(f"rendered {len(sizes)} cards [{mode}] -> {OUT}")
@@ -397,3 +380,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

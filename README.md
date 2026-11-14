@@ -11,7 +11,22 @@
 </p>
 
 <p align="center">
-  <a href="https://portfolio-8gllllu08-ancdominater-gmailcoms-projects.vercel.app"><img src="cards/tile-portfolio.svg" width="32.5%" alt="Explore my portfolio" /></a>
-  <a href="https://www.linkedin.com/in/g-shashank"><img src="cards/tile-linkedin.svg" width="32.5%" alt="Connect on LinkedIn" /></a>
-  <a href="https://github.com/ANC-DOMINATER?tab=repositories"><img src="cards/tile-github.svg" width="32.5%" alt="Browse my GitHub" /></a>
+  <a href="https://portfolio-8gllllu08-ancdominater-gmailcoms-projects.vercel.app">Portfolio</a> &nbsp; / &nbsp;
+  <a href="https://www.linkedin.com/in/g-shashank">LinkedIn</a> &nbsp; / &nbsp;
+  <a href="https://github.com/ANC-DOMINATER?tab=repositories">GitHub</a>
+</p>
+
+<p align="center">
+  <img src="assets/icons/python.svg" width="40" height="40" alt="python" /> &nbsp;
+  <img src="assets/icons/typescript.svg" width="40" height="40" alt="typescript" /> &nbsp;
+  <img src="assets/icons/javascript.svg" width="40" height="40" alt="javascript" /> &nbsp;
+  <img src="assets/icons/react.svg" width="40" height="40" alt="react" /> &nbsp;
+  <img src="assets/icons/nextjs.svg" width="40" height="40" alt="nextjs" /> &nbsp;
+  <img src="assets/icons/nodejs.svg" width="40" height="40" alt="nodejs" /> &nbsp;
+  <img src="assets/icons/django.svg" width="40" height="40" alt="django" /> &nbsp;
+  <img src="assets/icons/docker.svg" width="40" height="40" alt="docker" /> &nbsp;
+  <img src="assets/icons/postgresql.svg" width="40" height="40" alt="postgresql" /> &nbsp;
+  <img src="assets/icons/mongodb.svg" width="40" height="40" alt="mongodb" /> &nbsp;
+  <img src="assets/icons/git.svg" width="40" height="40" alt="git" /> &nbsp;
+  <img src="assets/icons/figma.svg" width="40" height="40" alt="figma" /> &nbsp;
 </p>
