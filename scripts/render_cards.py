@@ -22,6 +22,7 @@ import string
 from html import escape
 from pathlib import Path
 
+from PIL import Image, ImageOps
 from fontTools import subset
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
@@ -29,7 +30,6 @@ from fontTools.varLib import instancer
 ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(os.environ.get("DATA", ROOT / "data" / "contributions.json"))
 OUT = Path(os.environ.get("OUT", ROOT / "cards"))
-README = Path(os.environ.get("README", ROOT / "README.md"))
 STATIC = os.environ.get("STATIC") == "1"
 FONT = ROOT / "fonts" / "SpaceGrotesk[wght].ttf"
 
@@ -50,15 +50,14 @@ TILES = [  # file, title, subtitle, url, colour
     ("tile-github", "GitHub", "All repositories",
      "https://github.com/ANC-DOMINATER?tab=repositories", "TEXT"),
 ]
-MAX_REPOS = int(os.environ.get("MAX_REPOS", "6"))
 
-# ---- palette (from the portfolio site) ---------------------------------------
-BG, PANEL, BORDER = "#0A0A0A", "#110F22", "#434887"
-ACCENT, GREEN = "#7C86FF", "#00D492"
-TEXT, MUTED = "#EEF2FF", "#A1A1A1"
+# ---- palette (paper, ink and cobalt) ---------------------------------------
+BG, PANEL, BORDER = "#F5F5F1", "#F5F5F1", "#E5E5DF"
+ACCENT, GREEN = "#3450FF", "#3450FF"
+TEXT, MUTED = "#171817", "#777981"
 BRAND = os.environ.get("BRAND", ACCENT)
-EMPTY = "#1C1A33"
-COL = {"ACCENT": ACCENT, "GREEN": GREEN, "TEXT": TEXT}
+EMPTY = "#E5E6EB"
+COL = {"ACCENT": ACCENT, "GREEN": "#F33B2E", "TEXT": "#FFCE18"}
 
 W = 800  # card width; README scales with width="100%"
 
@@ -115,7 +114,18 @@ def font_face(text):
     buf = io.BytesIO()
     f.save(buf)
     b64 = base64.b64encode(buf.getvalue()).decode()
-    return ("@font-face{font-family:'Space Grotesk';font-weight:300 700;"
+    serif_css = ""
+    for style in ("Regular", "Italic"):
+        sf = TTFont(ROOT / "fonts" / f"InstrumentSerif-{style}.ttf")
+        ss = subset.Subsetter(opt)
+        ss.populate(text=chars)
+        ss.subset(sf)
+        sf.flavor = "woff"
+        sb = io.BytesIO()
+        sf.save(sb)
+        enc = base64.b64encode(sb.getvalue()).decode()
+        serif_css += "@font-face{font-family:Serif; font-style:" + ("italic" if style == "Italic" else "normal") + ";src:url(data:font/woff;base64," + enc + ") format('woff')}"
+    return serif_css + ("@font-face{font-family:'Space Grotesk';font-weight:300 700;"
             f"src:url(data:font/woff;base64,{b64}) format('woff')}}")
 
 
@@ -166,6 +176,10 @@ def card(name, h, title, desc, body, extra_text="", defs=""):
 def T(x, y, s, size, fill, weight=400, anchor="start", cls="", d=None, extra=""):
     c = f' class="{cls}"' if cls and not STATIC else ""
     st = dly(d) if (cls and d is not None) else ""
+    inline = re.search(r' style="([^"]*)"', extra)
+    if inline and st:
+        st = st[:-1] + ";" + inline.group(1) + '"'
+        extra = extra[:inline.start()] + extra[inline.end():]
     return (f'<text x="{x}" y="{y}" font-size="{size}" font-weight="{weight}" fill="{fill}" '
             f'text-anchor="{anchor}"{extra}{c}{st}>{escape(s)}</text>')
 
@@ -204,63 +218,42 @@ def fmt(n):
 
 # ---- cards ---------------------------------------------------------------------
 def hero(t0):
-    cx, cy = 668, 130
-    inner = ""
+    rows = ""
     if PORTRAIT:
-        mime = {"png": "png", "jpg": "jpeg", "jpeg": "jpeg", "webp": "webp"}[PORTRAIT.suffix[1:].lower()]
-        b64 = base64.b64encode(PORTRAIT.read_bytes()).decode()
-        inner = (f'<clipPath id="pc"><circle cx="{cx}" cy="{cy}" r="74"/></clipPath>'
-                 f'<image href="data:image/{mime};base64,{b64}" x="{cx - 74}" y="{cy - 74}" width="148" '
-                 f'height="148" preserveAspectRatio="xMidYMid slice" clip-path="url(#pc)"/>')
-    else:
-        inner = (f'<circle cx="{cx}" cy="{cy}" r="74" fill="{PANEL}"/>'
-                 + T(cx, cy + 22, MONOGRAM, 64, ACCENT, 700, "middle"))
-    lines = wrap(TAGLINE, 18, 500)
-    blob = deco(
-        f'<circle cx="610" cy="40" r="150" fill="{ACCENT}" opacity=".10">'
-        '<animate attributeName="cx" values="610;650;610" dur="14s" repeatCount="indefinite"/></circle>'
-        f'<circle cx="120" cy="250" r="120" fill="{GREEN}" opacity=".06">'
-        '<animate attributeName="cy" values="250;215;250" dur="11s" repeatCount="indefinite"/></circle>')
-    ring = deco(
-        f'<circle cx="{cx}" cy="{cy}" r="92" fill="none" stroke="{ACCENT}" stroke-opacity=".55" '
-        'stroke-width="1.5" stroke-dasharray="3 9" stroke-linecap="round">'
-        f'<animateTransform attributeName="transform" type="rotate" from="0 {cx} {cy}" '
-        f'to="360 {cx} {cy}" dur="40s" repeatCount="indefinite"/></circle>')
-    dot = deco(f'<circle cx="52" cy="226" r="4" fill="none" stroke="{GREEN}">'
-               '<animate attributeName="r" values="4;11" dur="2.4s" repeatCount="indefinite"/>'
-               '<animate attributeName="opacity" values=".8;0" dur="2.4s" repeatCount="indefinite"/></circle>')
-    body = (blob + ring
-            + f'<g{dly(t0 + .3)}{"" if STATIC else " class=" + chr(34) + "fi" + chr(34)}>'
-            f'<circle cx="{cx}" cy="{cy}" r="78" fill="none" stroke="url(#ring)" stroke-width="3"/>{inner}</g>'
-            + T(48, 62, EYEBROW, 13, GREEN, 500, cls="fu", d=t0 + .1, extra=' letter-spacing="2"')
-            + T(46, 134, NAME, 58, TEXT, 700, cls="fu", d=t0 + .25)
-            + "".join(T(48, 172 + i * 27, ln, 18, MUTED, 400, cls="fu", d=t0 + .45 + i * .1)
-                      for i, ln in enumerate(lines))
-            + dot + f'<circle cx="52" cy="226" r="4" fill="{GREEN}"/>'
-            + T(66, 231, LOCATION, 14, MUTED, cls="fu", d=t0 + .7))
-    card("hero", 260, f"{NAME}: {EYEBROW.replace('  ', ' ')}", TAGLINE, body,
-         extra_text=NAME + EYEBROW + TAGLINE + LOCATION + MONOGRAM)
+        image = ImageOps.fit(Image.open(PORTRAIT).convert("L"), (84, 86), centering=(.5, .4))
+        image = ImageOps.autocontrast(image)
+        ramp = " .:-=+*#%@"
+        for y in range(image.height):
+            line = "".join(ramp[min(9, (255-image.getpixel((x,y)))*10//256)] for x in range(image.width))
+            rows += T(488, 66+y*3.5, line, 4.3, "#676963", cls="fi", d=.2+y*.018,
+                      extra=' xml:space="preserve" style="font-family:monospace"')
+    dot = deco(f'<circle cx="43" cy="48" r="3" fill="{ACCENT}"><animate attributeName="opacity" values="1;.25;1" dur="2s" repeatCount="indefinite"/></circle>')
+    body = (f'<rect x="40" y="45" width="6" height="6" rx="1" fill="{ACCENT}"/>' + dot
+        + T(56, 51, EYEBROW, 10, MUTED, extra=' letter-spacing="1.4"')
+        + T(38, 157, "G", 98, TEXT, cls="fu", d=.1, extra=' style="font-family:Serif"')
+        + T(38, 247, "Shashank", 98, ACCENT, cls="fu", d=.25, extra=' style="font-family:Serif;font-style:italic"')
+        + T(42, 298, "I build AI-driven apps, LLM pipelines", 16, "#494B4A", cls="fu", d=.45)
+        + T(42, 322, "and automation with Python and Next.js.", 16, "#494B4A", cls="fu", d=.55)
+        + T(42, 360, "BANGALORE, INDIA     /     ANC-DOMINATER", 10, MUTED, cls="fi", d=.7,
+            extra=' letter-spacing="1"') + rows)
+    card("hero", 396, NAME + " | AI engineer and full-stack developer", TAGLINE, body)
 
 
 def tile(t0, i, spec):
     name, title, sub, _, ck = spec
-    c = COL[ck]
-    d0 = t0 + i * .15
-    body = (f'<rect x="24" y="24" width="30" height="4" rx="2" fill="{c}"{dly(d0 + .05)}'
-            f'{"" if STATIC else " class=" + chr(34) + "gx" + chr(34)}/>'
-            + T(24, 70, title, 26, TEXT, 700, cls="fu", d=d0 + .1)
-            + T(24, 94, sub, 14, MUTED, cls="fu", d=d0 + .2)
-            + T(236, 52, "↗", 26, c, 500, "end", cls="fu", d=d0 + .3))
-    # tile uses its own 260x116 canvas
-    css = font_face(title + sub) + "text{font-family:'Space Grotesk',ui-sans-serif,system-ui,sans-serif}"
-    if not STATIC:
-        css += ANIM_CSS
-    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="260" height="116" viewBox="0 0 260 116" '
-           f'role="img" aria-labelledby="t"><title id="t">{escape(title)}: {escape(sub)}</title>'
-           f'<style>{css}</style><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">'
-           f'<stop offset="0" stop-color="{PANEL}"/><stop offset="1" stop-color="{BG}"/></linearGradient></defs>'
-           f'<rect x=".5" y=".5" width="259" height="115" rx="14" fill="url(#bg)" stroke="{BORDER}" '
-           f'stroke-opacity=".55"/>{body}</svg>')
+    color = COL[ck]
+    ink = TEXT if i == 2 else "#FFFFFF"
+    labels = ["EXPLORE", "CONNECT", "BUILD"]
+    titles = ["Portfolio", "LinkedIn", "GitHub"]
+    subs = ["Ideas into working software.", "Let us connect and collaborate.", "Code, experiments and learning."]
+    body = (f'<rect width="260" height="190" rx="14" fill="{color}"/>'
+        + T(22, 33, labels[i], 10, ink, extra=' letter-spacing="1.5"')
+        + T(236, 33, "→", 16, ink, anchor="end", cls="fu", d=t0+i*.15)
+        + T(20, 104, titles[i], 43, ink, cls="fu", d=t0+.1+i*.15,
+            extra=' style="font-family:Serif;font-style:italic"')
+        + T(22, 143, subs[i], 11, ink, cls="fu", d=t0+.2+i*.15))
+    css = font_face(body) + "text{font-family:'Space Grotesk',sans-serif}" + ("" if STATIC else ANIM_CSS)
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="260" height="190" viewBox="0 0 260 190" role="img"><title>{title}: {sub}</title><style>{css}</style>{body}</svg>'
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / f"{name}.svg").write_text(svg, encoding="utf-8")
 
@@ -294,7 +287,7 @@ def activity(t0, days, st):
         h = max(2, (base - top) * v / vmax)
         bx = x0 + slot * i + (slot - bw) / 2
         d0 = t0 + .35 + i * .06
-        fill = GREEN if i == pk else ACCENT
+        fill = ACCENT if i == pk else TEXT
         bars += (f'<rect x="{bx:.1f}" y="{base - h:.1f}" width="{bw}" height="{h:.1f}" rx="5" '
                  f'fill="{fill}" fill-opacity="{1 if i == pk else .8}"{dly(d0)}'
                  f'{"" if STATIC else " class=" + chr(34) + "gr" + chr(34)}/>')
@@ -305,7 +298,7 @@ def activity(t0, days, st):
     blocks = [
         ("STREAK", f"{st['cur']} days", f"longest {st['longest']} days", GREEN),
         ("ACTIVE DAYS", fmt(st["active"]), f"of the last {st['span']} · {round(100 * st['active'] / st['span'])}%", ACCENT),
-        ("BUSIEST DAY", fmt(st["busiest"]["count"]), st["busiest"]["date"].strftime("%b %-d, %Y"), TEXT),
+        ("BUSIEST DAY", fmt(st["busiest"]["count"]), st["busiest"]["date"].strftime("%b %d, %Y"), TEXT),
     ]
     side = ""
     for i, (lab, val, sub, c) in enumerate(blocks):
@@ -316,7 +309,7 @@ def activity(t0, days, st):
                  + T(sx, y0 + 49, sub, 12, MUTED, cls="fu", d=d0 + .16))
     pulse = deco(f'<circle cx="{sx - 14}" cy="106" r="3" fill="{GREEN}" opacity="0"><animate attributeName="opacity" '
                  f'values="1;.25;1" dur="2.4s" begin="{t0 + .8:.2f}s" repeatCount="indefinite"/></circle>') if st["cur"] else ""
-    body = (T(32, 50, "Contributions per month", 22, TEXT, 700, cls="fu", d=t0)
+    body = (T(32, 50, "A year of building", 34, TEXT, 400, cls="fu", d=t0, extra=' style="font-family:Serif"')
             + T(32, 74, f"{fmt(st['total'])} in the last 12 months", 13, MUTED, cls="fu", d=t0 + .1)
             + grid + bars + labels
             + f'<line x1="560" x2="560" y1="96" y2="290" stroke="{BORDER}" stroke-opacity=".35"/>'
@@ -327,35 +320,6 @@ def activity(t0, days, st):
          f"{fmt(st['total'])} contributions in 12 months; current streak {st['cur']} days; "
          f"{st['active']} active days; busiest day {st['busiest']['date']} with {st['busiest']['count']}.",
          body, extra_text=txt)
-
-
-def repo_card(t0, i, r):
-    name = r["name"]
-    desc = wrap(r.get("description") or "", 14, 690, lines=2) if r.get("description") else []
-    lang, lc = r.get("language"), r.get("language_color") or MUTED
-    body = (f'<rect x="0" y="22" width="4" height="40" rx="2" fill="{ACCENT}"{dly(t0)}'
-            f'{"" if STATIC else " class=" + chr(34) + "gx" + chr(34)}/>'
-            + T(32, 48, name, 22, TEXT, 700, cls="fu", d=t0 + .05)
-            + T(W - 32, 48, "↗", 22, ACCENT, 500, "end", cls="fu", d=t0 + .15)
-            + "".join(T(32, 76 + k * 20, ln, 14, MUTED, cls="fu", d=t0 + .15 + k * .08) for k, ln in enumerate(desc)))
-    y, x = (118 if desc else 84), 32
-    meta = ""
-    if lang:
-        meta += (f'<circle cx="{x + 5}" cy="{y - 4}" r="5" fill="{lc}"/>'
-                 + T(x + 18, y, lang, 13, MUTED))
-        x += 18 + tw(lang, 13) + 24
-    star = "M0,-6 L1.8,-1.9 6.4,-1.7 2.8,1.2 4,5.7 0,3.2 -4,5.7 -2.8,1.2 -6.4,-1.7 -1.8,-1.9Z"
-    meta += (f'<path d="{star}" transform="translate({x + 6} {y - 5})" fill="none" stroke="{MUTED}" stroke-width="1.3" stroke-linejoin="round"/>'
-             + T(x + 18, y, fmt(r.get("stars", 0)), 13, MUTED))
-    x += 18 + tw(fmt(r.get("stars", 0)), 13) + 24
-    fork = (f'<g transform="translate({x + 4} {y - 11})" fill="none" stroke="{MUTED}" stroke-width="1.3">'
-            '<circle cx="0" cy="0" r="2.2"/><circle cx="8" cy="0" r="2.2"/><circle cx="4" cy="12" r="2.2"/>'
-            '<path d="M0,2.2 V5 Q0,7 4,7 Q8,7 8,5 V2.2 M4,7 V9.8"/></g>')
-    meta += fork + T(x + 22, y, fmt(r.get("forks", 0)), 13, MUTED)
-    body += f'<g{dly(t0 + .3)}{"" if STATIC else " class=" + chr(34) + "fi" + chr(34)}>{meta}</g>'
-    card(f"repo-{i + 1}", 142 if desc else 108, f"{name}: featured repository",
-         r.get("description") or name, body,
-         extra_text=name + (r.get("description") or "") + (lang or "") + "0123456789,")
 
 
 def graph(t0, days, st):
@@ -405,7 +369,7 @@ def graph(t0, days, st):
               + "".join(f'<rect x="{lx + 8 + i * (cell + 4)}" y="{226 - cell}" width="{cell}" height="{cell}" rx="2.5" fill="{s}"/>'
                         for i, s in enumerate(shades))
               + T(lx + 8 + 5 * (cell + 4) + 4, 226, "More", 11, MUTED))
-    body = (T(32, 50, "Contribution graph", 22, TEXT, 700, cls="fu", d=t0)
+    body = (T(32, 50, "Every day, in blue", 34, TEXT, 400, cls="fu", d=t0, extra=' style="font-family:Serif;font-style:italic"')
             + T(W - 32, 50, f"{fmt(st['total'])} contributions in the last year", 13, MUTED, 400, "end", cls="fu", d=t0 + .1)
             + months + wd + cells + ring + legend)
     card("graph", 248, "Contribution graph",
@@ -413,39 +377,17 @@ def graph(t0, days, st):
          extra_text="Contribution graph contributions in the last year Less More Mon Wed Fri" + "".join(calendar.month_abbr) + "0123456789,")
 
 
-# ---- readme ----------------------------------------------------------------------
-def update_readme(repos, login):
-    if not README.exists():
-        return
-    block = "\n".join(
-        f'<a href="{r["url"]}"><img src="cards/repo-{i + 1}.svg" width="100%" alt="{escape(r["name"])}: '
-        f'{escape(r.get("description") or "repository")}"/></a>' for i, r in enumerate(repos))
-    txt = README.read_text(encoding="utf-8")
-    new = re.sub(r"(<!-- repos:start -->).*?(<!-- repos:end -->)",
-                 lambda m: f"{m.group(1)}\n{block}\n{m.group(2)}", txt, flags=re.S)
-    if new != txt:
-        README.write_text(new, encoding="utf-8")
-
-
 def main():
     data = load()
     days, st = data["days"], stats(data["days"])
-    repos = data.get("repos", [])[:MAX_REPOS]
+    # No project panels: the profile stays focused on the person and activity.
     for old in OUT.glob("repo-*.svg"):
         old.unlink()
-    t = 0.0
-    hero(t)
-    t += .6
+    hero(0)
+    graph(.5, days, st)
+    activity(1.1, days, st)
     for i, spec in enumerate(TILES):
-        tile(t, i, spec)
-    t += .8
-    activity(t, days, st)
-    t += 1.4
-    for i, r in enumerate(repos):
-        repo_card(t + i * .3, i, r)
-    t += .3 * len(repos) + .3
-    graph(t, days, st)
-    update_readme(repos, data.get("login", "ANC-DOMINATER"))
+        tile(1.8, i, spec)
     mode = "STATIC (final frame)" if STATIC else "animated"
     sizes = {p.name: p.stat().st_size for p in sorted(OUT.glob("*.svg"))}
     print(f"rendered {len(sizes)} cards [{mode}] -> {OUT}")
